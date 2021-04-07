@@ -227,11 +227,13 @@ func (c *Component) processing(ctx context.Context) error {
 		if c.retries > 0 {
 			if handler.processedMessages {
 				i = 0
-				// if no component error has already been set, it is probably a handler error
-				if componentError == nil {
-					componentError = handler.err
-				}
 			}
+
+			// if no component error has already been set, it is probably a handler error
+			if componentError == nil {
+				componentError = handler.err
+			}
+
 			log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, componentError)
 			time.Sleep(c.retryWait)
 

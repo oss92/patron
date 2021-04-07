@@ -219,10 +219,18 @@ func (c *Component) processing(ctx context.Context) error {
 		if c.retries > 0 {
 			if handler.processedMessages {
 				i = 0
-				componentError = nil
+				// if no component error has already been set, it is probably a handler error
+				if componentError == nil {
+					componentError = handler.err
+				}
 			}
 			log.Errorf("failed run, retry %d/%d with %v wait: %v", i, c.retries, c.retryWait, componentError)
 			time.Sleep(c.retryWait)
+
+			if i < retries {
+				// set the component error to nil to ready for the next iteration
+				componentError = nil
+			}
 		}
 
 		// If there is no component error which is a result of not being able to initialize the consumer

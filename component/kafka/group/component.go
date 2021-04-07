@@ -193,18 +193,26 @@ func (c *Component) processing(ctx context.Context) error {
 		}
 
 		if client != nil {
-			// `Consume` should be called inside a loop, when a
-			// server-side re-balance happens, the consumer session will need to be
-			// recreated to get the new claims
-			err := client.Consume(ctx, c.topics, handler)
-			componentError = err
-			if err != nil {
-				log.Errorf("error from kafka consumer: %v", err)
-			}
+			for {
+				// `Consume` should be called inside an infinite loop, when a
+				// server-side re-balance happens, the consumer session will need to be
+				// recreated to get the new claims
+				err := client.Consume(ctx, c.topics, handler)
+				componentError = err
+				if err != nil {
+					log.Errorf("error from kafka consumer: %v", err)
+					break
+				}
 
-			err = client.Close()
-			if err != nil {
-				log.Errorf("error closing kafka consumer: %v", err)
+				if handler.err != nil {
+					break
+				}
+
+				err = client.Close()
+				if err != nil {
+					log.Errorf("error closing kafka consumer: %v", err)
+					break
+				}
 			}
 		}
 
